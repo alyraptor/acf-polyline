@@ -1,0 +1,196 @@
+.coordinates_section {
+    margin: 0 0 15px;
+}
+
+.coordinates_item {
+    position: relative;
+    display: grid;
+    border: solid 1px #eeeeee;
+    grid-template-columns: auto 40px;
+    grid-template-rows: auto;
+    grid-template-areas: 
+        "data controls";
+}
+
+.coordinates_item + .coordinates_item {
+    border-top: 0;
+}
+
+.coordinates_item .coordinates_row label {
+    padding: 6px 0;
+}
+
+.coordinates_item .coordinates_row input[type='text'] {
+    margin: 2px 0;
+}
+
+.coordinates_item_rows {
+    position: relative;
+    grid-area: data;
+}
+
+.coordinates_row {
+    display: grid;
+    padding: 10px 0 10px 10px;
+    grid-template-columns: 40px auto 15px;
+    grid-template-rows: auto;
+    grid-template-areas: 
+        "label input degrees";
+}
+
+.coordinates_row + .coordinates_row {
+    border-top: 0;
+}
+
+.coordinates_controls {
+    border-left: solid 1px #eeeeee;
+    background: #f9f9f9;
+    cursor: pointer;
+    grid-area: controls;
+}
+
+.coordinates_edit {
+    display: flex;
+    height: 100%;
+    background-color: inherit;
+    color: #777777;
+    text-decoration: none;
+    justify-content: center;
+    align-items: center;
+}
+
+.coordinates_edit:hover {
+    background-color: #555555;
+    color: #f9f9f9;
+}
+
+.coordinates_edit:focus {
+    background-color: #555555;
+    color: #f9f9f9;
+}
+
+.coordinates_edit.editing {
+    background-color: #555555;
+    color: #f9f9f9;
+}
+
+.coordinates_edit_cog {
+    transition: all .1s ease-in;
+    opacity: 0;
+}
+
+.coordinates_item:hover .coordinates_edit_cog {
+    opacity: 1;
+}
+
+.coordinates_edit:focus .coordinates_edit_cog {
+    opacity: 1;
+}
+
+.coordinates_edit.editing .coordinates_edit_cog {
+    opacity: 1;
+}
+
+.section_header {
+    display: block;
+    padding: 0;
+    margin: 0 0 3px;
+    grid-area: header;
+    font-weight: bold;
+}
+
+.degrees_symbol {
+    text-align: center;
+}
+
+.inline_controls {
+    padding: 10px 0;
+    text-align: right;
+}
+
+.button_right {
+    justify-self: end;
+}
+
+.pl_control_button {
+    width: 34px;
+    height: 34px;
+    text-align: center;
+}
+
+#gmap_options label {
+    padding: 6px 0;
+    width: 105px;
+}
+
+/* Dialog Settings */
+
+.edit_dialog_container {
+    position: absolute;
+    width: calc(100% - 40px);
+    height: 100%;
+}
+
+.edit_dialog_box {
+    position: relative;
+    display: flex;
+    width: 100%;
+    height: 100%;
+    align-items: center;
+    justify-content: center;
+}
+
+.edit_dialog_box .button {
+    margin: 0 5px;
+}
+
+.edit_dialog_overlay {
+    position: absolute;
+    width: 100%;
+    height: 100%;
+    background-color: #555555;
+    opacity: .7;
+}
+
+.edit_dialog_controls {
+    z-index: 100;
+}
+
+.dialog_prompt {
+    z-index: 100;
+}
+
+.dialog_header {
+    margin: 0 0 15px;
+    font-size: 15px;
+    font-weight: bold;
+    color: #ffffff;
+}
+
+.button_warning {
+    background: #ed6c39 !important;
+    border-color: #cf5e32 #bf5830 #bf5830 !important;
+    box-shadow: 0 1px 0 #bf5830 !important;
+    color: #ffffff !important;
+}
+
+.input_error {
+    border: solid 1px #de1422 !important;
+    background-color: rgba(255, 0, 0, .1) !important;
+}
+
+#generator_alert {
+    display: flex;
+    margin: 0 0 15px;
+    width: 100%;
+    text-align: right;
+    justify-content: flex-end;
+}
+
+.alert_success {
+    color: #0d8039;
+}
+
+.alert_error {
+    color: #de1422;
+}
