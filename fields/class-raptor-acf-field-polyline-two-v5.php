@@ -157,11 +157,6 @@ class raptor_acf_field_polyline_two extends acf_field {
 		
 		$polyline_decoded = json_decode ( $field['value'] );
 
-		// TODO: Remove
-		// echo '<pre>';
-		// 	print_r( $this );
-		// echo '</pre>';
-
 		$start_coords 	= $polyline_decoded->request->origin->location;
 		$end_coords 	= $polyline_decoded->request->destination->location;
 		$waypoints 		= $polyline_decoded->request->waypoints;
@@ -236,14 +231,12 @@ class raptor_acf_field_polyline_two extends acf_field {
 					</div>
 				</div>
 			</div>
-		<?php
-		if (!empty($waypoints)) {
-			$wp_counter = 0;
-		?>
 			<div class="coordinates_section" id="coordinates_waypoints">
 				<p class="section_header">Waypoints</p>
 				<div class="coordinates_list">
 		<?php
+		if (!empty($waypoints)) {
+			$wp_counter = 0;
 			foreach($waypoints as $wp) {
 				$wp_counter++;
 		?>
@@ -268,15 +261,13 @@ class raptor_acf_field_polyline_two extends acf_field {
 					</div>
 		<?php
 			}
+		}
 		?>
 				</div>
 				<div class="inline_controls">
 					<a class="acf-button button button-primary button_right" href="#" data-event="add-wpt">Add Waypoint</a>
 				</div>
 			</div>
-		<?php
-		}
-		?>
 			<div id="coordinates_end" class="coordinates_section">
 				<p class="section_header">Destination</p>
 				<div class="coordinates_list">
