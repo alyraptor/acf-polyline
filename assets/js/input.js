@@ -18,6 +18,11 @@
 		var polyField = $field[0].querySelector('#polyline_text textarea');
 		var wptListElem = $field[0].querySelector('#coordinates_waypoints .coordinates_list');
 		var wptGenCount = 0;
+		var openDialog = null;
+
+		document.addEventListener('closeDialog', function() {
+			openDialog = null;
+		});
 
 		$field[0].querySelector('#polyline_field_controls a[data-event="polyline-generate"]').addEventListener('click', function (event) {
 			generateCode(polyField);
@@ -28,7 +33,7 @@
 		});
 
 		$field[0].querySelector('#polyline_field_controls a[data-event="polyline-delete"]').addEventListener('click', function (event) {
-			removePolyline(polyField);
+			confirmRemovePolyline(event);
 		});
 
 		$field[0].querySelector('a[data-event="add-wpt"]').addEventListener('click', function (event) {
@@ -167,7 +172,12 @@
 			}
 		}
 
-		function removePolyline(polyField) {
+		function confirmRemovePolyline(event) {
+			
+		}
+
+		function removePolyline() {
+			polyField = document.querySelector('#polyline_text textarea');
 			polyField.value = '';
 		}
 
@@ -243,49 +253,40 @@
 			wptListElem.appendChild(newPoint);
 		}
 
-		function confirmRemoveWaypoint(event) {
+		function confirmRemoveWaypoint(event, dialog) {
 
-			let confirmPrompt = document.createElement('div');
-				confirmPrompt.classList.add('dialog_prompt');
+			dialog.clear();
 
 			let confirmText = document.createElement('p');
 				confirmText.classList.add('dialog_header');
 				confirmText.innerText = 'Remove Waypoint?';
 
-			let confirmPos = document.createElement('a');
-				confirmPos.href='#';
-				confirmPos.classList.add('button', 'button_warning');
-				confirmPos.innerText = 'Remove';
+			let confirm = document.createElement('a');
+				confirm.href='#';
+				confirm.classList.add('button', 'button_warning');
+				confirm.innerText = 'Remove';
 
-			let confirmNeg = document.createElement('a');
-				confirmNeg.href = '#';
-				confirmNeg.classList.add('button');
-				confirmNeg.innerText = 'Cancel';
+			let cancel = document.createElement('a');
+				cancel.href = '#';
+				cancel.classList.add('button');
+				cancel.innerText = 'Cancel';
 
-			let dialogElement = document.getElementById('polyline_dialog');
-			let dialogBox = dialogElement.querySelector('.edit_dialog_box');
-			let dialogControls = dialogElement.querySelector('.edit_dialog_controls');
+			dialog.controls.appendChild(confirmText);
+			dialog.controls.appendChild(confirm);
+			dialog.controls.appendChild(cancel);
 
-			dialogControls.style.display = 'none';
-
-			confirmPrompt.appendChild(confirmText);
-			confirmPrompt.appendChild(confirmPos);
-			confirmPrompt.appendChild(confirmNeg);
-			dialogBox.appendChild(confirmPrompt);
-
-			confirmNeg.addEventListener('click', handleEditorRequest);
-			document.addEventListener('click', function() {
-				if (!dialogElement.contains(event.target)) {
-					handleEditorRequest(event);
-				}
-			});
-
-			confirmPos.addEventListener('click', event => {
-				event.preventDefault();
-				event.stopPropagation();
+			cancel.addEventListener('click', handleEditorRequest);
+			confirm.addEventListener('click', event => {
 				removeWaypoint(event.target.closest('.waypoint.coordinates_item'));
-				removeEscapeHandlers();
 			});
+	
+			/*
+			*  Stop event from bubbling up in the DOM. Without this,
+			*  the events in Dialog.addEscapeHandlers are triggered automatically.
+			*/
+
+			event.preventDefault();
+			event.stopPropagation();
 		}
 
 		function moveWaypointFromDialog(event) {
@@ -315,55 +316,53 @@
 
 		function handleEditorRequest(event) {
 
-			let currentDialog = document.getElementById('polyline_dialog');
-			let eventParentEl = event.target.closest('.waypoint.coordinates_item');
+			/*
+			*  Point at proper element, regardless of which child
+			*  might have been clicked
+			*/
+
 			let editButtonEl = event.target.classList.contains('coordinates_edit') ?
-					event.target :
-					event.target.closest('.coordinates_edit');
+				event.target :
+				event.target.closest('.coordinates_edit');
+			let eventParentEl = event.target.closest('.waypoint.coordinates_item');
 
-			if (currentDialog !== null) {
+			function closeFunction() {
+				editButtonEl.classList.remove('editing');
+				editButtonEl.parentNode.blur();
+				document.removeEventListener('closeDialog', closeFunction);
+			}
+
+			if (openDialog) {
 				// If a dialog already exists
-				if (!eventParentEl.contains(currentDialog)) {
-					// If user clicked a different element
-					closeDialog();
-					removeEscapeHandlers();
-
-					createEditDialogElements(eventParentEl);
-					addEscapeHandlers();
-					editButtonEl.classList.add('editing');
-				} else {
+				if (eventParentEl.contains(openDialog.container)) {
 					// If user clicked the same element
-					closeDialog();
+					openDialog.close();
+				} else {
+					// If user clicked a different element
+					openDialog.close();
+
+					createEditDialog(eventParentEl);
+					editButtonEl.classList.add('editing');
+					document.addEventListener('closeDialog', closeFunction);
 				}
 			} else {
-				createEditDialogElements(eventParentEl);
-				addEscapeHandlers();
+				createEditDialog(eventParentEl);
 				editButtonEl.classList.add('editing');
+				document.addEventListener('closeDialog', closeFunction);
 			}
 			
 			/*
 			*  Stop event from bubbling up in the DOM. Without this,
-			*  the events in addEscapeHandlers are triggered automatically.
+			*  the events in Dialog.addEscapeHandlers are triggered automatically.
 			*/
 			
 			event.preventDefault();
 			event.stopPropagation();
 		}
 
-		function createEditDialogElements(wptElement) {
+		function createEditDialog(wptElement) {
 
-			let diContainer = document.createElement('div');
-				diContainer.id = 'polyline_dialog';
-				diContainer.classList.add('edit_dialog_container');
-			
-			let diOverlay = document.createElement('div');
-				diOverlay.classList.add('edit_dialog_overlay');
-
-			let diBox = document.createElement('div');
-				diBox.classList.add('edit_dialog_box');
-
-			let diControls = document.createElement('div');
-				diControls.classList.add('edit_dialog_controls');
+			openDialog = new Dialog(wptElement);
 
 			let moveUp = document.createElement('a');
 				moveUp.classList.add('button');
@@ -382,77 +381,90 @@
 				moveDown.setAttribute('data-direction', 'down');
 				moveDown.innerText = 'Move Down';
 
-			diControls.appendChild(moveUp);
-			diControls.appendChild(remove);
-			diControls.appendChild(moveDown);
-			diBox.appendChild(diOverlay);
-			diBox.appendChild(diControls);
-			diContainer.appendChild(diBox);
+			openDialog.controls.appendChild(moveUp);
+			openDialog.controls.appendChild(remove);
+			openDialog.controls.appendChild(moveDown);
 
-			wptElement.appendChild(diContainer);
-
-			moveUp.addEventListener('click', moveWaypointFromDialog);
-			remove.addEventListener('click', confirmRemoveWaypoint);
-			moveDown.addEventListener('click', moveWaypointFromDialog);
+			moveUp.addEventListener('click', function() {
+				moveWaypointFromDialog(event, openDialog);
+			});
+			remove.addEventListener('click', function() {
+				confirmRemoveWaypoint(event, openDialog);
+			});
+			moveDown.addEventListener('click', function () {
+				moveWaypointFromDialog(event, openDialog);
+			});
 		}
 
-		function addEscapeHandlers() {
-			document.addEventListener('click', dialogClickHandler);
-			document.addEventListener('keydown', dialogEscapeHandler);
-		}
+		class Dialog {
 
-		function removeEscapeHandlers() {
-			document.removeEventListener('click', dialogClickHandler);
-			document.removeEventListener('keydown', dialogEscapeHandler);
-		}
+			constructor(parent) {
+				this.parent = parent;
 
-		/*
-		*  If we click outside the dialog or press "Esc," close the dialog.
-		*  (Storing handlers as namedfunctions so they can be removed with
-		*  removeEventListener.)
-		*/
+				this.container = document.createElement('div');
+				this.container.id = 'polyline_dialog';
+				this.container.classList.add('dialog_container');
 
-		function dialogClickHandler(event) {
+				this.overlay = document.createElement('div');
+				this.overlay.classList.add('dialog_overlay');
 
-			let dialogElement = document.getElementById('polyline_dialog');
-			if (!dialogElement.contains(event.target)) {
-				closeDialog();
+				this.box = document.createElement('div');
+				this.box.classList.add('dialog_box');
+
+				this.controls = document.createElement('div');
+				this.controls.classList.add('dialog_controls');
+
+				this.parent.appendChild(this.container);
+				this.container.appendChild(this.box);
+				this.box.appendChild(this.overlay);
+				this.box.appendChild(this.controls);
+
+				this.closeEvent = new Event('closeDialog');
+
+				this.addEscapeHandlers();
 			}
 
-			event.preventDefault();
-			event.stopPropagation();
-		}
+			clickHandler(event) {
 
-		function dialogEscapeHandler(event) {
-			if (event.key === "Escape") {
-				closeDialog();
+				if (!this.container.contains(event.target)) {
+					this.close();
+					this.removeEscapeHandlers();
+				}
+
+				event.preventDefault();
+				event.stopPropagation();
 			}
-		}
-		
-		function closeDialog() {
 
-			let dialogElement = document.getElementById('polyline_dialog');
-			let editingFlag = document.querySelector('.editing');
-			let controlElement;
+			keyHandler(event) {
+
+				if (event.key === "Escape") {
+					this.close();
+					this.removeEscapeHandlers();
+				}
+			}
 			
-			if (dialogElement !== null) {
-				controlElement = dialogElement.parentNode.querySelector('.coordinates_edit');
-				dialogElement.remove();
+			addEscapeHandlers() {
+				document.addEventListener('click', this.storedClickHandler = this.clickHandler.bind(this));
+				document.addEventListener('keydown', this.storedKeyHandler = this.keyHandler.bind(this));
 			}
 
-			/*
-			*  Clean up visual indicators
-			*/
-
-			if (controlElement !== null) {
-				controlElement.blur();
-			}
-			if (editingFlag !== null) {
-				editingFlag.classList.remove('editing');
+			removeEscapeHandlers() {
+				document.removeEventListener('click', this.storedClickHandler);
+				document.removeEventListener('keydown', this.storedKeyHandler);
 			}
 
-			removeEscapeHandlers();
-		}
+			clear() {
+				while (this.controls.firstChild) {
+					this.controls.removeChild(this.controls.firstChild);
+				}
+			}
+
+			close() {
+				this.container.remove();
+				this.removeEscapeHandlers();
+				document.dispatchEvent(this.closeEvent);
+			}
+		}	
 	}
 	
 	
