@@ -33,7 +33,7 @@
 		});
 
 		$field[0].querySelector('#polyline_field_controls a[data-event="polyline-delete"]').addEventListener('click', function (event) {
-			confirmRemovePolyline(event);
+			confirmRemovePolyline(polyField.parentNode.parentNode);
 		});
 
 		$field[0].querySelector('a[data-event="add-wpt"]').addEventListener('click', function (event) {
@@ -170,10 +170,6 @@
 				polyField.readOnly = true;
 				editButton.innerText = 'Edit';
 			}
-		}
-
-		function confirmRemovePolyline(event) {
-			
 		}
 
 		function removePolyline() {
@@ -364,6 +360,8 @@
 
 			openDialog = new Dialog(wptElement);
 
+			openDialog.container.classList.add('edit_dialog_container');
+
 			let moveUp = document.createElement('a');
 				moveUp.classList.add('button');
 				moveUp.setAttribute('data-event', 'wpt-move');
@@ -394,6 +392,46 @@
 			moveDown.addEventListener('click', function () {
 				moveWaypointFromDialog(event, openDialog);
 			});
+		}
+
+		function confirmRemovePolyline(parentElement) {
+
+			openDialog = new Dialog(parentElement);
+
+			console.log(openDialog);
+
+			let confirmText = document.createElement('p');
+				confirmText.classList.add('dialog_header');
+				confirmText.innerText = 'Remove Stored Data?';
+
+			let confirm = document.createElement('a');
+				confirm.href = '#';
+				confirm.classList.add('button', 'button_warning');
+				confirm.innerText = 'Remove';
+
+			let cancel = document.createElement('a');
+				cancel.href = '#';
+				cancel.classList.add('button');
+				cancel.innerText = 'Cancel';
+
+			openDialog.controls.appendChild(confirmText);
+			openDialog.controls.appendChild(confirm);
+			openDialog.controls.appendChild(cancel);
+
+			cancel.addEventListener('click', function () {
+				event.preventDefault();
+				event.stopPropagation();
+				openDialog.close();
+			});
+			confirm.addEventListener('click', removePolyline);
+
+			/*
+			*  Stop event from bubbling up in the DOM. Without this,
+			*  the events in Dialog.addEscapeHandlers are triggered automatically.
+			*/
+
+			event.preventDefault();
+			event.stopPropagation();
 		}
 
 		class Dialog {

@@ -178,11 +178,13 @@ class raptor_acf_field_polyline_two extends acf_field {
 		*  Create HTML for user input
 		*/
 		?>
-		<div id="polyline_text">
-			<textarea name="<?php echo esc_attr($field['name']) ?>" rows="10" readonly><?php echo $field['value']; ?></textarea>
+		<div class="polyline_stored_response">
+			<div id="polyline_text">
+				<textarea name="<?php echo esc_attr($field['name']) ?>" rows="10" readonly><?php echo $field['value']; ?></textarea>
 		<?php
 		echo $path_preview;
 		?>
+			</div>
 		</div>
 		<div class="inline_controls" id="polyline_field_controls">
 			<a class="acf-button button" href="#" data-event="polyline-edit">Edit</a>
