@@ -14,10 +14,15 @@
 	
 	function initialize_field( $field ) {
 
-		var directionsService = new google.maps.DirectionsService;
-		var polyField = $field[0].querySelector('#polyline_text textarea');
-		var wptListElem = $field[0].querySelector('#coordinates_waypoints .coordinates_list');
-		var wptGenCount = 0;
+		var OPEN_DIALOG = null;
+		var WPT_GEN_COUNT = 0;
+
+		let polyField = $field[0].querySelector('#polyline_text textarea');
+		let wptListElem = $field[0].querySelector('#coordinates_waypoints .coordinates_list');
+
+		document.addEventListener('closeDialog', function() {
+			OPEN_DIALOG = null;
+		});
 
 		$field[0].querySelector('#polyline_field_controls a[data-event="polyline-generate"]').addEventListener('click', function (event) {
 			generateCode(polyField);
@@ -28,7 +33,7 @@
 		});
 
 		$field[0].querySelector('#polyline_field_controls a[data-event="polyline-delete"]').addEventListener('click', function (event) {
-			removePolyline(polyField);
+			handleRemovePolylineRequest();
 		});
 
 		$field[0].querySelector('a[data-event="add-wpt"]').addEventListener('click', function (event) {
@@ -38,6 +43,10 @@
 		$field[0].querySelectorAll('a[data-event="edit-wpt"]').forEach(function(element) {
 			element.addEventListener('click', handleEditorRequest);
 		});
+
+		/*
+		*  Request data from Google
+		*/
 
 		function generateCode(polyField) {
 			var checkFields = [],
@@ -95,7 +104,7 @@
 
 			/*
 			*  Validate coordinates
-			*  Future: Allow and ignore if both input boxes are blank?
+			*  TODO: Allow and ignore if both input boxes are blank?
 			*/
 
 			for (let x = 0; x < checkFields.length; x++) {
@@ -122,7 +131,7 @@
 
 			} else {
 
-				var routeProps = {
+				let routeProps = {
 					origin: startCoords,
 					destination: endCoords,
 					waypoints: waypoints,
@@ -133,6 +142,8 @@
 				/*
 				*  Send request
 				*/
+
+				let directionsService = new google.maps.DirectionsService;
 
 				directionsService.route(routeProps, function (response, status) {
 					if (response.status === "OK") {
@@ -155,6 +166,10 @@
 			}
 		}
 
+		/*
+		*  Basic CRUD
+		*/
+
 		function lockEdit(polyField) {
 			var editButton = $('[data-event="polyline-edit"]')[0];
 
@@ -167,14 +182,33 @@
 			}
 		}
 
-		function removePolyline(polyField) {
+		function removePolyline() {
+			polyField = document.querySelector('#polyline_text textarea');
 			polyField.value = '';
+		}
+
+		function removeWaypoint(wptElement) {
+			wptElement.remove();
+		}
+
+		function moveWaypoint(wptElement, moveDirection) {
+			if (
+				moveDirection === 'up'
+				&& wptElement.previousElementSibling !== null
+			) {
+				wptElement.parentNode.insertBefore(wptElement, wptElement.previousElementSibling);
+			} else if (
+				moveDirection === 'down'
+				&& wptElement.nextElementSibling !== null
+			) {
+				wptElement.parentNode.insertBefore(wptElement, wptElement.nextElementSibling.nextElementSibling);
+			}
 		}
 
 		function addWaypoint(wptListElem) {
 
-			wptGenCount++;
-			let wptName = 'new_wpt' + wptGenCount;
+			WPT_GEN_COUNT++;
+			let wptName = 'new_wpt' + WPT_GEN_COUNT;
 
 			let newPoint = document.createElement('div');
 				newPoint.classList.add('waypoint', 'coordinates_item');
@@ -243,127 +277,170 @@
 			wptListElem.appendChild(newPoint);
 		}
 
-		function confirmRemoveWaypoint(event) {
+		/*
+		*  Dialogs and handlers
+		*/
 
-			let confirmPrompt = document.createElement('div');
-				confirmPrompt.classList.add('dialog_prompt');
+		function handleRemovePolylineRequest() {
+
+			/*
+			*  Point at proper element, regardless of which child
+			*  might have been clicked
+			*/
+
+			let parentElement = document.querySelector('#polyline_text').parentNode;
+
+			if (OPEN_DIALOG) {
+				// If a dialog already exists
+				OPEN_DIALOG.close();
+			}
+
+			confirmRemovePolyline(parentElement);
+
+			/*
+			*  Stop event from bubbling up in the DOM. Without this,
+			*  the events in Dialog.addEscapeHandlers are triggered automatically.
+			*/
+
+			event.preventDefault();
+			event.stopPropagation();
+		}
+
+		function confirmRemovePolyline(parentElement) {
+
+			OPEN_DIALOG = new Dialog(parentElement);
 
 			let confirmText = document.createElement('p');
 				confirmText.classList.add('dialog_header');
-				confirmText.innerText = 'Remove Waypoint?';
+				confirmText.innerText = 'Clear Generated Polyline?';
 
-			let confirmPos = document.createElement('a');
-				confirmPos.href='#';
-				confirmPos.classList.add('button', 'button_warning');
-				confirmPos.innerText = 'Remove';
+			let confirm = document.createElement('a');
+				confirm.href = '#';
+				confirm.classList.add('button', 'button_warning');
+				confirm.innerText = 'Remove';
 
-			let confirmNeg = document.createElement('a');
-				confirmNeg.href = '#';
-				confirmNeg.classList.add('button');
-				confirmNeg.innerText = 'Cancel';
+			let cancel = document.createElement('a');
+				cancel.href = '#';
+				cancel.classList.add('button');
+				cancel.innerText = 'Cancel';
 
-			let dialogElement = document.getElementById('polyline_dialog');
-			let dialogBox = dialogElement.querySelector('.edit_dialog_box');
-			let dialogControls = dialogElement.querySelector('.edit_dialog_controls');
+			OPEN_DIALOG.controls.appendChild(confirmText);
+			OPEN_DIALOG.controls.appendChild(confirm);
+			OPEN_DIALOG.controls.appendChild(cancel);
 
-			dialogControls.style.display = 'none';
-
-			confirmPrompt.appendChild(confirmText);
-			confirmPrompt.appendChild(confirmPos);
-			confirmPrompt.appendChild(confirmNeg);
-			dialogBox.appendChild(confirmPrompt);
-
-			confirmNeg.addEventListener('click', handleEditorRequest);
-			document.addEventListener('click', function() {
-				if (!dialogElement.contains(event.target)) {
-					handleEditorRequest(event);
-				}
-			});
-
-			confirmPos.addEventListener('click', event => {
+			cancel.addEventListener('click', function () {
 				event.preventDefault();
 				event.stopPropagation();
-				removeWaypoint(event.target.closest('.waypoint.coordinates_item'));
-				removeEscapeHandlers();
+				OPEN_DIALOG.close();
 			});
+			confirm.addEventListener('click', function () {
+				removePolyline();
+				OPEN_DIALOG.close();
+			});
+
+			/*
+			*  Stop event from bubbling up in the DOM. Without this,
+			*  the events in Dialog.addEscapeHandlers are triggered automatically.
+			*/
+
+			event.preventDefault();
+			event.stopPropagation();
 		}
 
-		function moveWaypointFromDialog(event) {
+		function handleEditorRequest(event) {
+
+			/*
+			*  Point at proper element, regardless of which child
+			*  might have been clicked
+			*/
+
+			let editButtonEl = event.target.classList.contains('coordinates_edit') ?
+				event.target :
+				event.target.closest('.coordinates_edit');
+			let eventParentEl = event.target.closest('.waypoint.coordinates_item');
+
+			function dialogCloseEvent() {
+				editButtonEl.classList.remove('editing');
+				editButtonEl.parentNode.blur();
+				document.removeEventListener('closeDialog', dialogCloseEvent);
+			}
+
+			if (OPEN_DIALOG) {
+				// If a dialog already exists
+				if (eventParentEl.contains(OPEN_DIALOG.container)) {
+					// If user clicked the same element
+					OPEN_DIALOG.close();
+				} else {
+					// If user clicked a different element
+					OPEN_DIALOG.close();
+
+					createEditDialog(eventParentEl);
+					editButtonEl.classList.add('editing');
+					document.addEventListener('closeDialog', dialogCloseEvent);
+				}
+			} else {
+				createEditDialog(eventParentEl);
+				editButtonEl.classList.add('editing');
+				document.addEventListener('closeDialog', dialogCloseEvent);
+			}
+
+			/*
+			*  Stop event from bubbling up in the DOM. Without this,
+			*  the events in Dialog.addEscapeHandlers are triggered automatically.
+			*/
+
+			event.preventDefault();
+			event.stopPropagation();
+		}
+
+		function moveWaypointHandler(event) {
 			let moveDirection = event.target.dataset.direction;
 			let wptElement = event.target.closest('.waypoint.coordinates_item');
 
 			moveWaypoint(wptElement, moveDirection)
 		}
 
-		function removeWaypoint(wptElement) {
-			wptElement.remove();
-		}
+		function confirmRemoveWaypoint(event, dialog) {
 
-		function moveWaypoint(wptElement, moveDirection) {
-			if (
-				moveDirection === 'up'
-				&& wptElement.previousElementSibling !== null
-			) {
-				wptElement.parentNode.insertBefore(wptElement, wptElement.previousElementSibling);
-			} else if (
-				moveDirection === 'down'
-				&& wptElement.nextElementSibling !== null
-			) {
-				wptElement.parentNode.insertBefore(wptElement, wptElement.nextElementSibling.nextElementSibling);
-			}
-		}
+			dialog.clear();
 
-		function handleEditorRequest(event) {
+			let confirmText = document.createElement('p');
+				confirmText.classList.add('dialog_header');
+				confirmText.innerText = 'Remove Waypoint?';
 
-			let currentDialog = document.getElementById('polyline_dialog');
-			let eventParentEl = event.target.closest('.waypoint.coordinates_item');
-			let editButtonEl = event.target.classList.contains('coordinates_edit') ?
-					event.target :
-					event.target.closest('.coordinates_edit');
+			let confirm = document.createElement('a');
+				confirm.href='#';
+				confirm.classList.add('button', 'button_warning');
+				confirm.innerText = 'Remove';
 
-			if (currentDialog !== null) {
-				// If a dialog already exists
-				if (!eventParentEl.contains(currentDialog)) {
-					// If user clicked a different element
-					closeDialog();
-					removeEscapeHandlers();
+			let cancel = document.createElement('a');
+				cancel.href = '#';
+				cancel.classList.add('button');
+				cancel.innerText = 'Cancel';
 
-					createEditDialogElements(eventParentEl);
-					addEscapeHandlers();
-					editButtonEl.classList.add('editing');
-				} else {
-					// If user clicked the same element
-					closeDialog();
-				}
-			} else {
-				createEditDialogElements(eventParentEl);
-				addEscapeHandlers();
-				editButtonEl.classList.add('editing');
-			}
-			
+			dialog.controls.appendChild(confirmText);
+			dialog.controls.appendChild(confirm);
+			dialog.controls.appendChild(cancel);
+
+			cancel.addEventListener('click', handleEditorRequest);
+			confirm.addEventListener('click', event => {
+				removeWaypoint(event.target.closest('.waypoint.coordinates_item'));
+			});
+	
 			/*
 			*  Stop event from bubbling up in the DOM. Without this,
-			*  the events in addEscapeHandlers are triggered automatically.
+			*  the events in Dialog.addEscapeHandlers are triggered automatically.
 			*/
-			
+
 			event.preventDefault();
 			event.stopPropagation();
 		}
 
-		function createEditDialogElements(wptElement) {
+		function createEditDialog(wptElement) {
 
-			let diContainer = document.createElement('div');
-				diContainer.id = 'polyline_dialog';
-				diContainer.classList.add('edit_dialog_container');
-			
-			let diOverlay = document.createElement('div');
-				diOverlay.classList.add('edit_dialog_overlay');
+			OPEN_DIALOG = new Dialog(wptElement);
 
-			let diBox = document.createElement('div');
-				diBox.classList.add('edit_dialog_box');
-
-			let diControls = document.createElement('div');
-				diControls.classList.add('edit_dialog_controls');
+			OPEN_DIALOG.container.classList.add('edit_dialog_container');
 
 			let moveUp = document.createElement('a');
 				moveUp.classList.add('button');
@@ -382,77 +459,94 @@
 				moveDown.setAttribute('data-direction', 'down');
 				moveDown.innerText = 'Move Down';
 
-			diControls.appendChild(moveUp);
-			diControls.appendChild(remove);
-			diControls.appendChild(moveDown);
-			diBox.appendChild(diOverlay);
-			diBox.appendChild(diControls);
-			diContainer.appendChild(diBox);
+			OPEN_DIALOG.controls.appendChild(moveUp);
+			OPEN_DIALOG.controls.appendChild(remove);
+			OPEN_DIALOG.controls.appendChild(moveDown);
 
-			wptElement.appendChild(diContainer);
-
-			moveUp.addEventListener('click', moveWaypointFromDialog);
-			remove.addEventListener('click', confirmRemoveWaypoint);
-			moveDown.addEventListener('click', moveWaypointFromDialog);
-		}
-
-		function addEscapeHandlers() {
-			document.addEventListener('click', dialogClickHandler);
-			document.addEventListener('keydown', dialogEscapeHandler);
-		}
-
-		function removeEscapeHandlers() {
-			document.removeEventListener('click', dialogClickHandler);
-			document.removeEventListener('keydown', dialogEscapeHandler);
+			moveUp.addEventListener('click', function() {
+				moveWaypointHandler(event, OPEN_DIALOG);
+			});
+			remove.addEventListener('click', function() {
+				confirmRemoveWaypoint(event, OPEN_DIALOG);
+			});
+			moveDown.addEventListener('click', function () {
+				moveWaypointHandler(event, OPEN_DIALOG);
+			});
 		}
 
 		/*
-		*  If we click outside the dialog or press "Esc," close the dialog.
-		*  (Storing handlers as namedfunctions so they can be removed with
-		*  removeEventListener.)
+		*  Dialog class
 		*/
 
-		function dialogClickHandler(event) {
+		class Dialog {
 
-			let dialogElement = document.getElementById('polyline_dialog');
-			if (!dialogElement.contains(event.target)) {
-				closeDialog();
+			constructor(parent) {
+				this.parent = parent;
+
+				this.container = document.createElement('div');
+				this.container.id = 'polyline_dialog';
+				this.container.classList.add('dialog_container');
+
+				this.overlay = document.createElement('div');
+				this.overlay.classList.add('dialog_overlay');
+
+				this.box = document.createElement('div');
+				this.box.classList.add('dialog_box');
+
+				this.controls = document.createElement('div');
+				this.controls.classList.add('dialog_controls');
+
+				this.parent.appendChild(this.container);
+				this.container.appendChild(this.box);
+				this.box.appendChild(this.overlay);
+				this.box.appendChild(this.controls);
+
+				this.closeEvent = new Event('closeDialog');
+
+				this.addEscapeHandlers();
 			}
 
-			event.preventDefault();
-			event.stopPropagation();
-		}
+			clickHandler(event) {
 
-		function dialogEscapeHandler(event) {
-			if (event.key === "Escape") {
-				closeDialog();
+				if (!this.container.contains(event.target)) {
+					this.close();
+					this.removeEscapeHandlers();
+				}
+
+				event.preventDefault();
+				event.stopPropagation();
 			}
-		}
-		
-		function closeDialog() {
 
-			let dialogElement = document.getElementById('polyline_dialog');
-			let editingFlag = document.querySelector('.editing');
-			let controlElement;
+			keyHandler(event) {
+
+				if (event.key === "Escape") {
+					this.close();
+					this.removeEscapeHandlers();
+				}
+			}
 			
-			if (dialogElement !== null) {
-				controlElement = dialogElement.parentNode.querySelector('.coordinates_edit');
-				dialogElement.remove();
+			addEscapeHandlers() {
+				document.addEventListener('click', this.storedClickHandler = this.clickHandler.bind(this));
+				document.addEventListener('keydown', this.storedKeyHandler = this.keyHandler.bind(this));
 			}
 
-			/*
-			*  Clean up visual indicators
-			*/
-
-			if (controlElement !== null) {
-				controlElement.blur();
-			}
-			if (editingFlag !== null) {
-				editingFlag.classList.remove('editing');
+			removeEscapeHandlers() {
+				document.removeEventListener('click', this.storedClickHandler);
+				document.removeEventListener('keydown', this.storedKeyHandler);
 			}
 
-			removeEscapeHandlers();
-		}
+			clear() {
+				while (this.controls.firstChild) {
+					this.controls.removeChild(this.controls.firstChild);
+				}
+			}
+
+			close() {
+				this.container.remove();
+				this.removeEscapeHandlers();
+				document.dispatchEvent(this.closeEvent);
+			}
+		}	
 	}
 	
 	

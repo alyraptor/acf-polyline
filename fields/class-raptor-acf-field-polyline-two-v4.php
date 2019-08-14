@@ -109,9 +109,8 @@ class raptor_acf_field_polyline_two extends acf_field {
 	*  @date	23/01/13
 	*/
 	
-	function create_field( $field )
-	{
-				
+	function create_field( $field )	{	
+		
 		/*
 		*  Use the stored polyline data to regenerate user input for start/end/waypoint
 		*/
@@ -121,74 +120,135 @@ class raptor_acf_field_polyline_two extends acf_field {
 		$start_coords 	= $polyline_decoded->request->origin->location;
 		$end_coords 	= $polyline_decoded->request->destination->location;
 		$waypoints 		= $polyline_decoded->request->waypoints;
+		$travel_mode	= $polyline_decoded->request->travelMode;
 
-		$point_preview = '';
+		/*
+		*  Set up map preview thumbnails
+		*/
+
 		$path_preview = '';
-
-		if ($field['show_waypoint_preview'] == 'show') {
-			$point_preview = '<div class="waypoint_preview"></div>';
-		}
 
 		if ($field['show_path_preview'] == 'show') {
 			$path_preview = '<div class="waypoint_preview"></div>';
 		}
 
+		$travel_mode = isset($travel_mode) ? $travel_mode : get_option('polyline_options')['travel_mode'];
+
 		/*
 		*  Create HTML for user input
 		*/
 		?>
-		<input type="text" name="<?php echo esc_attr($field['name']) ?>" value="<?php echo esc_attr($field['api_key']) ?>" disabled />
-		<div class="coordinates">
-			<div id="coordinates_start">
-				<label for="start_lat">Start Latitude</label>
-				<input type="text" name="start_lat" placeholder="0.0" value="<?php echo esc_attr($start_coords->lat); ?>" /><span class="degrees_symbol">&deg;</span>
-				<label for="start_lng">Start Longitude</label>
-				<input type="text" name="start_lng" placeholder="0.0" value="<?php echo esc_attr($start_coords->lng); ?>" /><span class="degrees_symbol">&deg;</span>
-			</div>
-		<?php
-		echo $point_preview;
-		if (!empty($waypoints)) {
-			$wp_counter = 0;
-		?>
-			<div id="coordinates_waypoints">
-		<?php
-			foreach($waypoints as $wp) {
-				$wp_counter++;
-		?>
-				<div class="coordinates_waypoint_item">
-					<label for="wp<?php echo $wp_counter;?>_lat">Waypoint Latitude</label>
-					<input type="text" name="wp<?php echo $wp_counter;?>_lat" value="<?php echo $wp->location->location->lat; ?>" /><span class="degrees_symbol">&deg;</span>
-					<label for="wp<?php echo $wp_counter;?>_lng">Waypoint Longitude</label>
-					<input type="text" name="wp<?php echo $wp_counter;?>_lng" value="<?php echo $wp->location->location->lng; ?>" /><span class="degrees_symbol">&deg;</span>
-				</div>
-		<?php
-			echo $point_preview;
-			}
-		?>
-			</div>
-		<?php
-		}
-		?>
-			<div id="coordinates_end">
-				<label for="end_lat">End Latitude</label>
-				<input type="text" name="end_lat" placeholder="0.0" value="<?php echo esc_attr($end_coords->lat); ?>" /><span class="degrees_symbol">&deg;</span>
-				<label for="end_lng">End Longitude</label>
-				<input type="text" name="end_lng" placeholder="0.0" value="<?php echo esc_attr($end_coords->lng); ?>" /><span class="degrees_symbol">&deg;</span>
-			</div>
-		<?php
-		echo $point_preview;
-		?>
-		</div>
-		<div class="polyline_text">
-			<textarea name="<?php echo esc_attr($field['name']) ?>" rows="10"><?php echo $field['value']; ?></textarea>
-		</div>
+		<div class="polyline_stored_response">
+			<div id="polyline_text">
+				<textarea name="<?php echo esc_attr($field['name']) ?>" rows="10" readonly><?php echo $field['value']; ?></textarea>
 		<?php
 		echo $path_preview;
 		?>
-		<div class="polyline_field_controls">
-			<a class="acf-button button button-primary" href="#" data-event="polyline-generate">Generate</a>
+			</div>
+		</div>
+		<div class="inline_controls" id="polyline_field_controls">
 			<a class="acf-button button" href="#" data-event="polyline-edit">Edit</a>
-			<a class="acf-button button" href="#" data-event="polyline-delete">Remove</a>
+			<a class="acf-button button button_warning" href="#" data-event="polyline-delete">Remove</a>
+			<a class="acf-button button button-primary" href="#" data-event="polyline-generate">Generate</a>
+		</div>
+		<div id="generator_alert"></div>
+		<div class="coordinates_section" id="gmap_options">
+			<p class="section_header">Travel Mode</p>
+            <select name="travel_mode">
+		<?php
+			$selected = ($travel_mode === 'DRIVING') ? 'selected' : '' ;
+		?>
+				<option value="DRIVING" <?php echo $selected; ?>>Driving</option>
+		<?php
+			$selected = ($travel_mode === 'WALKING') ? 'selected' : '' ;
+		?>
+				<option value="WALKING" <?php echo $selected; ?>>Walking</option>
+		<?php
+			$selected = ($travel_mode === 'BICYCLING') ? 'selected' : '' ;
+		?>
+				<option value="BICYCLING" <?php echo $selected; ?>>Bicycling</option>
+		<?php
+			$selected = ($travel_mode === 'TRANSIT') ? 'selected' : '' ;
+		?>
+				<option value="TRANSIT" <?php echo $selected; ?>>Transit</option>
+			</select>
+		</div>
+		<div class="coordinates">
+			<div id="coordinates_start" class="coordinates_section">
+				<p class="section_header">Origin</p>
+				<div class="coordinates_list">
+					<div class="coordinates_item">
+						<div class="coordinates_item_rows">
+							<div class="coordinates_row">
+								<label for="start_lat">Lat.</label>
+								<input type="text" name="start_lat" value="<?php echo esc_attr($start_coords->lat); ?>" />
+								<span class="degrees_symbol">&deg;</span>
+							</div>
+							<div class="coordinates_row">
+								<label for="start_lng">Lon.</label>
+								<input type="text" name="start_lng" value="<?php echo esc_attr($start_coords->lng); ?>" />
+								<span class="degrees_symbol">&deg;</span>
+							</div>
+						</div>
+					</div>
+				</div>
+			</div>
+			<div class="coordinates_section" id="coordinates_waypoints">
+				<p class="section_header">Waypoints</p>
+				<div class="coordinates_list">
+		<?php
+		if (!empty($waypoints)) {
+			$wp_counter = 0;
+			foreach($waypoints as $wp) {
+				$wp_counter++;
+		?>
+					<div class="waypoint coordinates_item">
+						<div class="coordinates_item_rows">
+							<div class="coordinates_row">
+								<label for="wpt<?php echo $wp_counter;?>_lat">Lat.</label>
+								<input type="text" name="wpt<?php echo $wp_counter;?>_lat" data-type="wpt_lat" value="<?php echo $wp->location->location->lat; ?>" />
+								<span class="degrees_symbol">&deg;</span>
+							</div>
+							<div class="coordinates_row">
+								<label for="wpt<?php echo $wp_counter;?>_lng">Lon.</label>
+								<input type="text" name="wpt<?php echo $wp_counter;?>_lng" data-type="wpt_lng" value="<?php echo $wp->location->location->lng; ?>" />
+								<span class="degrees_symbol">&deg;</span>
+							</div>
+						</div>
+						<div class="coordinates_controls">
+							<a href="#" data-event="edit-wpt" data-id="wpt<?php echo $wp_counter; ?>" class="coordinates_edit">
+								<span class="coordinates_edit_cog dashicons dashicons-admin-generic"></span>
+							</a>
+						</div>
+					</div>
+		<?php
+			}
+		}
+		?>
+				</div>
+				<div class="inline_controls">
+					<a class="acf-button button button-primary button_right" href="#" data-event="add-wpt">Add Waypoint</a>
+				</div>
+			</div>
+			<div id="coordinates_end" class="coordinates_section">
+				<p class="section_header">Destination</p>
+				<div class="coordinates_list">
+					<div class="coordinates_item">
+						<div class="coordinates_item_rows">
+							<div class="coordinates_row">
+								<label for="end_lat">Lat.</label>
+								<input type="text" name="end_lat" value="<?php echo esc_attr($end_coords->lat); ?>" />
+								<span class="degrees_symbol">&deg;</span>
+							</div>
+							<div class="coordinates_row">
+								<label for="end_lng">Lon.</label>
+								<input type="text" name="end_lng" value="<?php echo esc_attr($end_coords->lng); ?>" />
+								<span class="degrees_symbol">&deg;</span>
+							</div>
+						</div>
+					</div>
+				</div>
+			</div>
 		</div>
 		<?php
 	}

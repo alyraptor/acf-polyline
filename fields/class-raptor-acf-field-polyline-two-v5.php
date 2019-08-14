@@ -149,18 +149,13 @@ class raptor_acf_field_polyline_two extends acf_field {
 	*  @return	n/a
 	*/
 	
-	function render_field( $field ) {		
+	function render_field( $field ) {	
 		
 		/*
 		*  Use the stored polyline data to regenerate user input for start/end/waypoint
 		*/
 		
 		$polyline_decoded = json_decode ( $field['value'] );
-
-		// TODO: Remove
-		// echo '<pre>';
-		// 	print_r( $this );
-		// echo '</pre>';
 
 		$start_coords 	= $polyline_decoded->request->origin->location;
 		$end_coords 	= $polyline_decoded->request->destination->location;
@@ -183,15 +178,17 @@ class raptor_acf_field_polyline_two extends acf_field {
 		*  Create HTML for user input
 		*/
 		?>
-		<div id="polyline_text">
-			<textarea name="<?php echo esc_attr($field['name']) ?>" rows="10" readonly><?php echo $field['value']; ?></textarea>
+		<div class="polyline_stored_response">
+			<div id="polyline_text">
+				<textarea name="<?php echo esc_attr($field['name']) ?>" rows="10" readonly><?php echo $field['value']; ?></textarea>
 		<?php
 		echo $path_preview;
 		?>
+			</div>
 		</div>
 		<div class="inline_controls" id="polyline_field_controls">
 			<a class="acf-button button" href="#" data-event="polyline-edit">Edit</a>
-			<a class="acf-button button" href="#" data-event="polyline-delete">Remove</a>
+			<a class="acf-button button button_warning" href="#" data-event="polyline-delete">Remove</a>
 			<a class="acf-button button button-primary" href="#" data-event="polyline-generate">Generate</a>
 		</div>
 		<div id="generator_alert"></div>
@@ -236,14 +233,12 @@ class raptor_acf_field_polyline_two extends acf_field {
 					</div>
 				</div>
 			</div>
-		<?php
-		if (!empty($waypoints)) {
-			$wp_counter = 0;
-		?>
 			<div class="coordinates_section" id="coordinates_waypoints">
 				<p class="section_header">Waypoints</p>
 				<div class="coordinates_list">
 		<?php
+		if (!empty($waypoints)) {
+			$wp_counter = 0;
 			foreach($waypoints as $wp) {
 				$wp_counter++;
 		?>
@@ -268,15 +263,13 @@ class raptor_acf_field_polyline_two extends acf_field {
 					</div>
 		<?php
 			}
+		}
 		?>
 				</div>
 				<div class="inline_controls">
 					<a class="acf-button button button-primary button_right" href="#" data-event="add-wpt">Add Waypoint</a>
 				</div>
 			</div>
-		<?php
-		}
-		?>
 			<div id="coordinates_end" class="coordinates_section">
 				<p class="section_header">Destination</p>
 				<div class="coordinates_list">
