@@ -4,7 +4,7 @@
 Plugin Name: Advanced Custom Fields: Polyline Generator
 Plugin URI: https://github.com/alyraptor/acf-polyline
 Description: A custom field type for Advanced Custom Fields to add a dynamically-generated polyline array using the Google Directions API
-Version: 0.0.1
+Version: 1.0.0
 Author: Aly Richardson
 Author URI: https://github.com/alyraptor
 License: GPLv2 or later
