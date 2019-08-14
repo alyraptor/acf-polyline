@@ -563,8 +563,8 @@
 		*  @return	n/a
 		*/
 		
-		acf.add_action('ready_field/type=polyline-two', initialize_field);
-		acf.add_action('append_field/type=polyline-two', initialize_field);
+		acf.add_action('ready_field/type=polyline', initialize_field);
+		acf.add_action('append_field/type=polyline', initialize_field);
 		
 		
 	} else {
