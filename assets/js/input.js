@@ -24,23 +24,23 @@
 			OPEN_DIALOG = null;
 		});
 
-		$field[0].querySelector('#polyline_field_controls a[data-event="polyline-generate"]').addEventListener('click', function (event) {
+		$field[0].querySelector('#polyline_field_controls button[data-event="polyline-generate"]').addEventListener('click', function (event) {
 			generateCode(polyField);
 		});
 
-		$field[0].querySelector('#polyline_field_controls a[data-event="polyline-edit"]').addEventListener('click', function (event) {
+		$field[0].querySelector('#polyline_field_controls button[data-event="polyline-edit"]').addEventListener('click', function (event) {
 			lockEdit(polyField);
 		});
 
-		$field[0].querySelector('#polyline_field_controls a[data-event="polyline-delete"]').addEventListener('click', function (event) {
+		$field[0].querySelector('#polyline_field_controls button[data-event="polyline-delete"]').addEventListener('click', function (event) {
 			handleRemovePolylineRequest();
 		});
 
-		$field[0].querySelector('a[data-event="add-wpt"]').addEventListener('click', function (event) {
+		$field[0].querySelector('button[data-event="add-wpt"]').addEventListener('click', function (event) {
 			addWaypoint(wptListElem);
 		});
 
-		$field[0].querySelectorAll('a[data-event="edit-wpt"]').forEach(function(element) {
+		$field[0].querySelectorAll('div[data-event="edit-wpt"]').forEach(function(element) {
 			element.addEventListener('click', handleEditorRequest);
 		});
 
@@ -250,8 +250,7 @@
 			let controls = document.createElement('div');
 				controls.classList.add('coordinates_controls');
 				
-			let editor = document.createElement('a');
-				editor.href = '#';
+			let editor = document.createElement('div');
 				editor.classList.add('coordinates_edit');
 				editor.setAttribute('data-event', 'edit-wpt');
 				editor.setAttribute('data-id', wptName);
@@ -314,14 +313,14 @@
 				confirmText.classList.add('dialog_header');
 				confirmText.innerText = 'Clear Generated Polyline?';
 
-			let confirm = document.createElement('a');
-				confirm.href = '#';
+			let confirm = document.createElement('button');
 				confirm.classList.add('button', 'button_warning');
+				confirm.setAttribute('type', 'button');
 				confirm.innerText = 'Remove';
 
-			let cancel = document.createElement('a');
-				cancel.href = '#';
+			let cancel = document.createElement('button');
 				cancel.classList.add('button');
+				cancel.setAttribute('type', 'button');
 				cancel.innerText = 'Cancel';
 
 			OPEN_DIALOG.controls.appendChild(confirmText);
@@ -408,14 +407,14 @@
 				confirmText.classList.add('dialog_header');
 				confirmText.innerText = 'Remove Waypoint?';
 
-			let confirm = document.createElement('a');
-				confirm.href='#';
+			let confirm = document.createElement('button');
 				confirm.classList.add('button', 'button_warning');
+				confirm.setAttribute('type', 'button');
 				confirm.innerText = 'Remove';
 
-			let cancel = document.createElement('a');
-				cancel.href = '#';
+			let cancel = document.createElement('button');
 				cancel.classList.add('button');
+				cancel.setAttribute('type', 'button');
 				cancel.innerText = 'Cancel';
 
 			dialog.controls.appendChild(confirmText);
@@ -442,19 +441,22 @@
 
 			OPEN_DIALOG.container.classList.add('edit_dialog_container');
 
-			let moveUp = document.createElement('a');
+			let moveUp = document.createElement('button');
 				moveUp.classList.add('button');
+				moveUp.setAttribute('type', 'button');
 				moveUp.setAttribute('data-event', 'wpt-move');
 				moveUp.setAttribute('data-direction', 'up');
 				moveUp.innerText = 'Move Up';
 
-			let remove = document.createElement('a');
+			let remove = document.createElement('button');
 				remove.classList.add('button', 'button_warning');
+				remove.setAttribute('type', 'button');
 				remove.setAttribute('data-event', 'wpt-remove');
 				remove.innerText = 'Remove';
 
-			let moveDown = document.createElement('a');
+			let moveDown = document.createElement('button');
 				moveDown.classList.add('button');
+				moveDown.setAttribute('type', 'button');
 				moveDown.setAttribute('data-event', 'wpt-move');
 				moveDown.setAttribute('data-direction', 'down');
 				moveDown.innerText = 'Move Down';

@@ -149,7 +149,7 @@ class raptor_acf_field_polyline extends acf_field {
 	*  @return	n/a
 	*/
 	
-	function render_field( $field ) {	
+	function render_field( $field ) {
 		
 		/*
 		*  Use the stored polyline data to regenerate user input for start/end/waypoint
@@ -187,9 +187,9 @@ class raptor_acf_field_polyline extends acf_field {
 			</div>
 		</div>
 		<div class="inline_controls" id="polyline_field_controls">
-			<a class="acf-button button" href="#" data-event="polyline-edit">Edit</a>
-			<a class="acf-button button button_warning" href="#" data-event="polyline-delete">Remove</a>
-			<a class="acf-button button button-primary" href="#" data-event="polyline-generate">Generate</a>
+			<button class="acf-button button" type="button" data-event="polyline-edit">Edit</button>
+			<button class="acf-button button button_warning" type="button" data-event="polyline-delete">Remove</button>
+			<button class="acf-button button button-primary" type="button" data-event="polyline-generate">Generate</button>
 		</div>
 		<div id="generator_alert"></div>
 		<div class="coordinates_section" id="gmap_options">
@@ -256,9 +256,9 @@ class raptor_acf_field_polyline extends acf_field {
 							</div>
 						</div>
 						<div class="coordinates_controls">
-							<a href="#" data-event="edit-wpt" data-id="wpt<?php echo $wp_counter; ?>" class="coordinates_edit">
+							<div class="coordinates_edit" data-event="edit-wpt" data-id="wpt<?php echo $wp_counter; ?>">
 								<span class="coordinates_edit_cog dashicons dashicons-admin-generic"></span>
-							</a>
+							</div>
 						</div>
 					</div>
 		<?php
@@ -267,7 +267,7 @@ class raptor_acf_field_polyline extends acf_field {
 		?>
 				</div>
 				<div class="inline_controls">
-					<a class="acf-button button button-primary button_right" href="#" data-event="add-wpt">Add Waypoint</a>
+					<button class="acf-button button button-primary button_right" type="button" data-event="add-wpt">Add Waypoint</button>
 				</div>
 			</div>
 			<div id="coordinates_end" class="coordinates_section">
