@@ -24,24 +24,24 @@
 			OPEN_DIALOG = null;
 		});
 
-		$field[0].querySelector('#polyline_field_controls button[data-event="polyline-generate"]').addEventListener('click', function (event) {
+		$($field[0].querySelector('#polyline_field_controls button[data-event="polyline-generate"]')).on('click tap touch', function (event) {
 			generateCode(polyField);
 		});
 
-		$field[0].querySelector('#polyline_field_controls button[data-event="polyline-edit"]').addEventListener('click', function (event) {
+		$($field[0].querySelector('#polyline_field_controls button[data-event="polyline-edit"]')).on('click tap touch', function (event) {
 			lockEdit(polyField);
 		});
 
-		$field[0].querySelector('#polyline_field_controls button[data-event="polyline-delete"]').addEventListener('click', function (event) {
+		$($field[0].querySelector('#polyline_field_controls button[data-event="polyline-delete"]')).on('click tap touch', function (event) {
 			handleRemovePolylineRequest();
 		});
 
-		$field[0].querySelector('button[data-event="add-wpt"]').addEventListener('click', function (event) {
+		$($field[0].querySelector('button[data-event="add-wpt"]')).on('click tap touch', function (event) {
 			addWaypoint(wptListElem);
 		});
 
 		$field[0].querySelectorAll('div[data-event="edit-wpt"]').forEach(function(element) {
-			element.addEventListener('click', handleEditorRequest);
+			$(element).on('click tap touch', handleEditorRequest);
 		});
 
 		/*
@@ -258,7 +258,7 @@
 			let cog = document.createElement('span');
 				cog.classList.add('coordinates_edit_cog', 'dashicons', 'dashicons-admin-generic');
 
-			editor.addEventListener('click', handleEditorRequest);
+			$(editor).on('click tap touch', handleEditorRequest);
 
 			latRow.appendChild(latLabel);
 			latRow.appendChild(latInput);
@@ -327,12 +327,12 @@
 			OPEN_DIALOG.controls.appendChild(confirm);
 			OPEN_DIALOG.controls.appendChild(cancel);
 
-			cancel.addEventListener('click', function () {
+			$(cancel).on('click tap touch', function () {
 				event.preventDefault();
 				event.stopPropagation();
 				OPEN_DIALOG.close();
 			});
-			confirm.addEventListener('click', function () {
+			$(confirm).on('click tap touch', function () {
 				removePolyline();
 				OPEN_DIALOG.close();
 			});
@@ -421,8 +421,8 @@
 			dialog.controls.appendChild(confirm);
 			dialog.controls.appendChild(cancel);
 
-			cancel.addEventListener('click', handleEditorRequest);
-			confirm.addEventListener('click', event => {
+			$(cancel).on('click tap touch', handleEditorRequest);
+			$(confirm).on('click tap touch', event => {
 				removeWaypoint(event.target.closest('.waypoint.coordinates_item'));
 			});
 	
@@ -465,13 +465,13 @@
 			OPEN_DIALOG.controls.appendChild(remove);
 			OPEN_DIALOG.controls.appendChild(moveDown);
 
-			moveUp.addEventListener('click', function() {
+			$(moveUp).on('click tap touch', function() {
 				moveWaypointHandler(event, OPEN_DIALOG);
 			});
-			remove.addEventListener('click', function() {
+			$(remove).on('click tap touch', function() {
 				confirmRemoveWaypoint(event, OPEN_DIALOG);
 			});
-			moveDown.addEventListener('click', function () {
+			$(moveDown).on('click tap touch', function () {
 				moveWaypointHandler(event, OPEN_DIALOG);
 			});
 		}
@@ -528,13 +528,13 @@
 			}
 			
 			addEscapeHandlers() {
-				document.addEventListener('click', this.storedClickHandler = this.clickHandler.bind(this));
-				document.addEventListener('keydown', this.storedKeyHandler = this.keyHandler.bind(this));
+				$(document).on('click tap touch', this.storedClickHandler = this.clickHandler.bind(this));
+				$(document).on('keydown', this.storedKeyHandler = this.keyHandler.bind(this));
 			}
 
 			removeEscapeHandlers() {
-				document.removeEventListener('click', this.storedClickHandler);
-				document.removeEventListener('keydown', this.storedKeyHandler);
+				$(document).off('click tap touch', this.storedClickHandler);
+				$(document).off('keydown', this.storedKeyHandler);
 			}
 
 			clear() {
