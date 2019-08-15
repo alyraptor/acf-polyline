@@ -113,24 +113,31 @@
     }
 	
     function travel_mode_callback() {
+
+		$travel_modes = [
+			'DRIVING',
+			'WALKING',
+			'BICYCLING',
+			'TRANSIT'
+		];
+		
 		?>
             <select name="polyline_options[travel_mode]">
 		<?php
-			$selected = (isset( $this->polyline_options['travel_mode'] ) && $this->polyline_options['travel_mode'] === 'DRIVING') ? 'selected' : '' ;
+			foreach($travel_modes as $mode) {
+
+				if (
+					isset( $this->polyline_options['travel_mode'] )
+					&& $this->polyline_options['travel_mode'] === $mode
+				) {
+					$selected = 'selected';
+				} else {
+					$selected = '';
+				}
+
+				echo '<option value="' . $mode . '" ' . $selected . '>' . ucfirst($mode) . '</option>';
+			}
 		?>
-				<option value="DRIVING" <?php echo $selected; ?>>Driving</option>
-		<?php
-			$selected = (isset( $this->polyline_options['travel_mode'] ) && $this->polyline_options['travel_mode'] === 'WALKING') ? 'selected' : '' ;
-		?>
-				<option value="WALKING" <?php echo $selected; ?>>Walking</option>
-		<?php
-			$selected = (isset( $this->polyline_options['travel_mode'] ) && $this->polyline_options['travel_mode'] === 'BICYCLING') ? 'selected' : '' ;
-		?>
-				<option value="BICYCLING" <?php echo $selected; ?>>Bicycling</option>
-		<?php
-			$selected = (isset( $this->polyline_options['travel_mode'] ) && $this->polyline_options['travel_mode'] === 'TRANSIT') ? 'selected' : '' ;
-		?>
-				<option value="TRANSIT" <?php echo $selected; ?>>Transit</option>
 			</select>
 		<?php
     }
